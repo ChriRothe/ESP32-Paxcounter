@@ -24,5 +24,7 @@
 #include "power.h"
 #include "antenna.h"
 #include "button.h"
+#include "ntp_sync.h"
+#include "custom_version.h"
 
 #endif

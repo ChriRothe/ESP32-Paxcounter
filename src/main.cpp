@@ -78,6 +78,8 @@ BME_IRQ         <- setBMEIRQ() <- Ticker.h
 
 // Basic Config
 #include "main.h"
+#include <WiFi.h>
+#include "time.h"
 
 char clientId[20] = {0}; // unique ClientID
 
@@ -125,7 +127,10 @@ void setup() {
 
   ESP_LOGI(TAG, "Starting %s v%s (runmode=%d / restarts=%d)", clientId,
            PROGVERSION, RTC_runmode, RTC_restarts);
-  ESP_LOGI(TAG, "code build date: %d", compileTime());
+  ESP_LOGI(TAG, ">>> Custom Build v%s | %s | built %s %s <<<",
+         CUSTOM_BUILD_VERSION, CUSTOM_BUILD_FEATURES,
+         CUSTOM_BUILD_DATE, CUSTOM_BUILD_TIME);       
+  // ESP_LOGI(TAG, "code build date: %d", compileTime());
 
   // print chip information on startup if in verbose mode after coldstart
 #if (VERBOSE)
@@ -197,7 +202,20 @@ void setup() {
   if (RTC_runmode == RUNMODE_POWERCYCLE)
     i2c_scan();
 
-// initialize display
+// Setze Zeit (UTC)
+// struct tm tm;
+// tm.tm_year = 2026 - 1900; // Jahr ab 1900
+// tm.tm_mon = 2 - 1;        // Monat (0-11)
+// tm.tm_mday = 17;          // Tag
+// tm.tm_hour = 21 ;          // Stunde
+// tm.tm_min = 25;           // Minute
+// tm.tm_sec = 0;            // Sekunde
+
+// time_t t = mktime(&tm);
+// struct timeval now = { .tv_sec = t };
+// settimeofday(&now, NULL); 
+
+    // initialize display
 #ifdef HAS_DISPLAY
   strcat_P(features, " DISP");
   DisplayIsOn = cfg.screenon;
@@ -393,6 +411,42 @@ void setup() {
   _ASSERT(rtc_init());
 #endif
 
+// =============================================================================
+// Änderungen in main.cpp / main.h
+// =============================================================================
+
+// --- In include/main.h (oder wo deine includes sind) ---
+// Diese Zeile hinzufügen:
+#include "ntp_sync.h"
+
+
+// --- In main.cpp, setup() ---
+// Den bestehenden RTC-Block suchen:
+
+#ifdef HAS_RTC
+  strcat_P(features, " RTC");
+  _ASSERT(rtc_init());
+#endif
+
+// Direkt DANACH einfügen (vor dem init_libpax()-Block weiter unten):
+
+#ifdef HAS_RTC
+  // NTP-Sync beim ersten Start oder wenn RTC-Zeit ungültig/veraltet ist.
+  // Verbindet kurz mit WiFi, stellt DS3231, trennt WiFi wieder.
+  // Danach läuft alles über die lokale RTC — kein dauerhaftes WiFi nötig.
+  if (RTC_runmode == RUNMODE_POWERCYCLE) {
+    if (ntp_sync_and_set_rtc()) {
+      ESP_LOGI(TAG, "Boot NTP sync successful");
+    } else {
+      ESP_LOGW(TAG, "Boot NTP sync failed — using existing RTC time");
+    }
+  }
+#endif
+
+// Der bestehende init_libpax()-Aufruf bleibt danach unverändert:
+// init_libpax();
+
+
 #if defined HAS_DCF77
   strcat_P(features, " DCF77");
 #endif
@@ -483,6 +537,9 @@ void setup() {
   RTC_runmode = RUNMODE_NORMAL;
 
   vTaskDelete(NULL);
+
+
+
 } // setup()
 
 void loop() { vTaskDelete(NULL); }

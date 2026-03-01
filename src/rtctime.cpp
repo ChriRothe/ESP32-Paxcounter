@@ -6,8 +6,10 @@ RtcDS3231<TwoWire> Rtc(Wire); // RTC hardware i2c interface
 
 // initialize RTC
 uint8_t rtc_init(void) {
-  Wire.begin(HAS_RTC);
-  Rtc.Begin(HAS_RTC);
+  // TTGO LoRa32: Standard I²C Pins SDA=21, SCL=22
+  // HAS_RTC ist ein Feature-Flag (=1), kein Pin!
+  Wire.begin(21, 22);
+  Rtc.Begin(21, 22);
 
   // configure RTC chip
   Rtc.Enable32kHzPin(false);
