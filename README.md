@@ -2,6 +2,18 @@
 
 Taylored Version of a **Wifi & Bluetooth driven, LoRaWAN enabled, Paxcounter and multi-sensor appliance, built on cheap ESP32 LoRa IoT boards** based on Cyberman54 excellent Work: https://cyberman54.github.io/ESP32-Paxcounter/
 
+For my own purposes, I 
+- deactivated the LoRaWAN part (which is still in the code).
+- stopped the Paxcounter from permanently blinking.
+- integrated a DS3231 RTC with automated time sync by connecting to Wi-Fi on startup to connect to NTP before disconnecting to perform its normal function.
+- made some changes to SD card logging.
+   - changed the date/time format to ISO 8601 for better compatibility with Excel in languages other than English.
+   - calculating some statistical data and storing it on the SD card too.
+   - switching to a two-file strategy (one for raw data and one for statistical data).
+   - splitting the files for each day
+
+Licenses and Credits like the original code:
+
 # License
 
 Copyright 2018-2022 Oliver Brandmueller <ob@sysadm.in>
