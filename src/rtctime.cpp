@@ -2,14 +2,23 @@
 
 #include "rtctime.h"
 
+#ifndef RTC_SDA
+#ifdef MY_DISPLAY_SDA
+#define RTC_SDA MY_DISPLAY_SDA
+#define RTC_SCL MY_DISPLAY_SCL
+#else
+#define RTC_SDA (21)
+#define RTC_SCL (22)
+#endif
+#endif
+
 RtcDS3231<TwoWire> Rtc(Wire); // RTC hardware i2c interface
 
 // initialize RTC
 uint8_t rtc_init(void) {
-  // TTGO LoRa32: Standard I²C Pins SDA=21, SCL=22
-  // HAS_RTC ist ein Feature-Flag (=1), kein Pin!
-  Wire.begin(21, 22);
-  Rtc.Begin(21, 22);
+  // HAS_RTC ist ein Feature-Flag (=1), KEIN Pin -> Pins explizit angeben.
+  // Der DS3231 hängt am selben I2C-Bus wie das OLED (TTGO LoRa32: 21/22).
+  Rtc.Begin(RTC_SDA, RTC_SCL);
 
   // configure RTC chip
   Rtc.Enable32kHzPin(false);

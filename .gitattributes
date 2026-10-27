@@ -1,0 +1,7 @@
+# Zeilenenden im Repo einheitlich als LF speichern (Checkout unter Windows: CRLF)
+* text=auto
+*.png binary
+*.jpg binary
+*.bmp binary
+*.gif binary
+*.bin binary

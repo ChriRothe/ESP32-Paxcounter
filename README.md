@@ -1,51 +1,89 @@
-# ESP32-Paxcounter
+# ESP32-Paxcounter – Event-Edition
 
-Taylored Version of a **Wifi & Bluetooth driven, LoRaWAN enabled, Paxcounter and multi-sensor appliance, built on cheap ESP32 LoRa IoT boards** based on Cyberman54 excellent Work: https://cyberman54.github.io/ESP32-Paxcounter/
+Angepasste Version des [ESP32-Paxcounter](https://github.com/cyberman54/ESP32-Paxcounter)
+von Oliver Brandmüller / Klaus Wilting zur **anonymen Besucherzählung bei Veranstaltungen**.
+Gezählt werden BLE- und WiFi-Geräte in Reichweite. Die Daten landen auf der SD-Karte und
+werden dort direkt für die Auswertung aufbereitet: Spitzenzeiten, Tagesverlauf, Event-Phasen.
 
-For my own purposes, I 
-- deactivated the LoRaWAN part (which is still in the code).
-- stopped the Paxcounter from permanently blinking.
-- integrated a DS3231 RTC with automated time sync by connecting to Wi-Fi on startup to connect to NTP before disconnecting to perform its normal function.
-- made some changes to SD card logging.
-   - changed the date/time format to ISO 8601 for better compatibility with Excel in languages other than English.
-   - calculating some statistical data and storing it on the SD card too.
-   - switching to a two-file strategy (one for raw data and one for statistical data).
-   - splitting the files for each day
+[![Firmware Build](https://github.com/ChriRothe/ESP32-Paxcounter/actions/workflows/build.yml/badge.svg)](https://github.com/ChriRothe/ESP32-Paxcounter/actions/workflows/build.yml)
 
-Licenses and Credits like the original code:
+**Ausführliche Projektdokumentation:** [PROJEKTDOKU_Paxcounter.md](PROJEKTDOKU_Paxcounter.md)
 
-# License
+## Unterschiede zum Original
 
-Copyright 2018-2022 Oliver Brandmueller <ob@sysadm.in>
+- **LoRaWAN deaktiviert** (der Code ist noch vorhanden, `HAS_LORA 0`)
+- **Status-LED ruhig** (kein Dauerblinken für den LoRa-Join)
+- **DS3231-RTC** mit **NTP-Sync beim Kaltstart**: Das Gerät verbindet sich kurz mit dem WLAN,
+  stellt die RTC und schaltet WiFi danach wieder ab. Das passiert **vor** dem Start des
+  Sniffers, sonst würde der WiFi-Zähler dauerhaft 0 zeigen.
+- **SD-Logging für Events**:
+  - `raw_YYYY-MM-DD.csv` – Rohdaten pro Messzyklus
+  - `stats_YYYY-MM-DD.csv` – 10-Minuten-Intervalle mit Peak, Delta, gleitendem 30-Minuten-Mittel, Trend und Phase
+  - `daily_summary.csv` – eine Zeile pro Tag, wird nach jedem Intervall aktualisiert
+  - Zeitstempel im Format ISO 8601 in **Lokalzeit (MEZ/MESZ)**, ohne Suffix, damit Excel sie direkt versteht
+  - neustart- und stromausfallsicher: Nach einem Reboot wird der Tageskontext von der Karte gelesen
 
-Copyright 2018-2022 Klaus Wilting <verkehrsrot@arcor.de>
+## Hardware
 
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
+| Komponente | Details |
+|---|---|
+| Board | LILYGO TTGO LoRa32 V2.1 (1.6.x), ESP32 – HAL-Datei `ttgov21new.h` |
+| RTC | DS3231 + AT24C32 (ZS-042), I²C an GPIO 21 (SDA) / 22 (SCL), 3,3 V |
+| SD-Karte | integrierter Slot, FAT32, **vor dem Einschalten einstecken** |
+| Display | integriertes OLED (SSD1306) |
 
-       http://www.apache.org/licenses/LICENSE-2.0
+## Bauen & Flashen
 
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
+Voraussetzung: VS Code mit der PlatformIO-Erweiterung.
 
-NOTICE:
-Parts of the source files in this repository are made available under different licenses,
-see file <A HREF="https://github.com/cyberman54/ESP32-Paxcounter/blob/master/LICENSE">LICENSE.txt</A> in this repository. Refer to each individual source file for more details.
+1. Repo klonen und in VS Code öffnen.
+2. Zugangsdaten anlegen (diese Dateien sind per `.gitignore` ausgeschlossen):
+   ```
+   shared/ota_sample.conf    -> shared/ota.conf     (WLAN-SSID/Passwort für den NTP-Sync eintragen)
+   shared/loraconf_sample.h  -> shared/loraconf.h   (unverändert lassen, LoRa ist aus)
+   ```
+3. Board per USB anschließen und in PlatformIO **Upload** (Umgebung `usb`) ausführen.
+4. Optional: Den **Serial Monitor** (115200 Baud) öffnen. Beim Start erscheint
+   `>>> Custom Build v1.2.0 ...`, danach `Boot NTP sync successful`.
 
-# Credits
+Nach Änderungen an `shared/paxcounter.conf` immer zuerst **Clean** und dann **Build** ausführen.
+Gespeicherte Einstellungen im NVRAM lassen sich mit `pio run -t erase` zurücksetzen.
 
-Thanks to
-- [Oliver Brandmüller](https://github.com/spmrider) for idea and initial setup of this project
-- [Charles Hallard](https://github.com/hallard) for major code contributions to this project
-- [robbi5](https://github.com/robbi5) for the payload converter
-- [Caspar Armster](https://www.dasdigidings.de/) for the The Things Stack V3 payload converter
-- [terrillmoore](https://github.com/mcci-catena) for maintaining the LMIC for arduino LoRaWAN stack
-- [sbamueller](https://github.com/sbamueller) for writing the tutorial in Make Magazine
-- [Stefan](https://github.com/nerdyscout) for paxcounter opensensebox integration
-- [August Quint](https://github.com/AugustQu) for adding SD card data logger and SDS011 support
-- [t-huyeng](https://github.com/t-huyeng) for adding a CI workflow and rework documentation
-- [TD-er](https://github.com/TD-er) for bugfixings and T-Beam documentation
+Die Firmware aus dem GitHub-Actions-Build enthält nur Platzhalter-WLAN-Daten. Sie dient
+zur Build-Kontrolle; für den Einsatz bitte lokal mit der eigenen `ota.conf` flashen.
+
+## Wichtige Einstellungen
+
+| Datei | Parameter | Wert |
+|---|---|---|
+| `shared/paxcounter.conf` | `BLECOUNTER` / `WIFICOUNTER` | 1 / 1 |
+| | `RSSILIMIT` | -70 dBm (Reichweite begrenzen) |
+| | `SENDCYCLE` | 30 (= Messzyklus 60 s) |
+| | `TIME_SYNC_TIMEZONE` | `CET-1CEST,M3.5.0,M10.5.0/3` |
+| | `SDLOGGING` | 1 (Systemlog auf SD) |
+| `include/sdcard.h` | `STATS_INTERVAL_SECONDS` | 600 |
+| | `PEAK_PHASE_THRESHOLD` | 0.80 |
+| `include/ntp_sync.h` | NTP-Server, Timeouts | |
+
+## Lizenz
+
+Copyright 2018-2022 Oliver Brandmueller <ob@sysadm.in>  
+Copyright 2018-2022 Klaus Wilting <verkehrsrot@arcor.de>  
+Anpassungen: Christian Rothe
+
+Licensed under the Apache License, Version 2.0 – siehe [LICENSE](LICENSE).
+Teile des Quellcodes stehen unter anderen Lizenzen, siehe die jeweiligen Dateien.
+
+## Credits
+
+Dank an alle Beitragenden des Originalprojekts, u. a.
+[Oliver Brandmüller](https://github.com/spmrider) (Idee & Grundgerüst),
+[Charles Hallard](https://github.com/hallard),
+[robbi5](https://github.com/robbi5),
+[Caspar Armster](https://www.dasdigidings.de/),
+[terrillmoore](https://github.com/mcci-catena),
+[sbamueller](https://github.com/sbamueller),
+[Stefan](https://github.com/nerdyscout),
+[August Quint](https://github.com/AugustQu) (SD-Logger),
+[t-huyeng](https://github.com/t-huyeng),
+[TD-er](https://github.com/TD-er).
