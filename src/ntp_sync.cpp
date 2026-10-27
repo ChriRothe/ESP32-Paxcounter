@@ -59,7 +59,13 @@ bool ntp_sync_and_set_rtc(void) {
     ESP_LOGI(TAG, "WiFi connected, IP: %s", WiFi.localIP().toString().c_str());
 
     // --- 2. NTP konfigurieren ---
-    // timezone = 0 → wir wollen immer UTC
+    // Mitteleuropäische Zeit mit automatischer Sommer/Winterzeit-Umschaltung
+    // CET-1     = Winterzeit UTC+1
+    // CEST      = Sommerzeit UTC+2
+    // M3.5.0    = letzter Sonntag im März (Sommerzeit)
+    // M10.5.0/3 = letzter Sonntag im Oktober um 3:00 Uhr (Winterzeit)
+    setenv("TZ", "CET-1CEST,M3.5.0,M10.5.0/3", 1);
+    tzset();
     configTime(0, 0, NTP_SERVER_1, NTP_SERVER_2, NTP_SERVER_3);
 
     // Auf gültige NTP-Zeit warten
@@ -87,11 +93,11 @@ bool ntp_sync_and_set_rtc(void) {
     if (ntpSuccess) {
         time_t now = time(NULL);
         struct tm tt;
-        gmtime_r(&now, &tt);
+        localtime_r(&now, &tt);
 
         char timeBuf[32];
         strftime(timeBuf, sizeof(timeBuf), "%Y-%m-%d %H:%M:%S", &tt);
-        ESP_LOGI(TAG, "NTP time received: %s UTC", timeBuf);
+        ESP_LOGI(TAG, "NTP time received: %s MEZ/MESZ", timeBuf);
 
         // In DS3231 schreiben (set_rtctime ist bereits in rtctime.cpp)
         set_rtctime(now);
