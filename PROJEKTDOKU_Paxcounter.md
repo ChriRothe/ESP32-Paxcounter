@@ -250,15 +250,29 @@ Intervalle).
 
 ## 11. Auswertung / Diagramme
 
-Das Python-Script `analyze.py` (nicht im Repo) erzeugt vier Charts aus den CSV-Dateien.
+`tools/analyze.py` erzeugt aus den CSV-Dateien der SD-Karte einen **interaktiven
+HTML-Bericht** (eine Datei, offline lesbar, Werte per Mausover) und eine Tagestabelle
+für Excel.
 
-Hinweis zum Einlesen: Die letzte Zeile kann abgeschnitten sein, wenn der Strom während des
-Schreibens weg war. Statt über die Länge (`== 20`) besser über das Parsen filtern. Das
-funktioniert für alte (UTC, `Z`) und neue (Lokalzeit) Daten:
-```python
-raw["Timestamp"] = pd.to_datetime(raw["Timestamp"], errors="coerce", utc=False)
-raw = raw.dropna(subset=["Timestamp"])
 ```
+pip install pandas plotly
+python tools/analyze.py E:\                         # SD-Karte direkt
+python tools/analyze.py C:\Daten\Event --von 2026-11-06 --bis 2026-11-08
+```
+
+Ausgabe im Datenordner (oder mit `-o pfad.html`):
+- `paxcounter_bericht.html`: Kennzahlen, Tagestabelle, Tagesverlauf pro Tag
+  (Rohwerte, 10-Min-Peaks BLE/WiFi, Peak-Phase als Band), Tagesvergleich auf einer
+  Uhrzeit-Achse, Stundenraster (Heatmap Tag × Stunde), Verteilung (Boxplot)
+- `paxcounter_bericht_tage.csv`: Tageswerte, Semikolon/Dezimalkomma für deutsches Excel
+
+Grundlage sind immer die `raw_*.csv`. 10-Minuten-Peaks und Tageswerte werden daraus
+neu berechnet, mit derselben Logik wie in der Firmware (Peak-Dauer = Intervalle
+≥ 80 % des Tagesmax). Dadurch passen alte und neue Firmware-Stände zusammen:
+- Zeitstempel mit `Z` (Firmware < 1.2, UTC) werden automatisch nach MEZ/MESZ umgerechnet
+- abgeschnittene Zeilen, doppelte Kopfzeilen und Duplikate werden verworfen und im
+  Bericht unter „Hinweise“ aufgeführt
+- Tage mit weniger als 10 Messwerten werden ignoriert (`--min-werte`)
 
 ---
 
@@ -278,7 +292,7 @@ raw = raw.dropna(subset=["Timestamp"])
 
 - [ ] v1.2 auf dem Board testen: Boot-Log (NTP vor libpax), WiFi-Werte > 0, Lokalzeit in den CSVs
 - [ ] Upstream v3.8.0 (u. a. libpax-Umzug nach `dbinfrago/libpax`, neuere Libs) einpflegen
-- [ ] `analyze.py` ins Repo aufnehmen (`tools/`)
+- [x] Auswertungs-Script `tools/analyze.py` (HTML-Bericht)
 - [ ] MQTT-Anbindung via HiveMQ Cloud für Live-Daten
 - [ ] Telegram-Bot für Push-Benachrichtigungen
 - [ ] Neue Hardware evaluieren: LILYGO T3-S3 + externes DS3231

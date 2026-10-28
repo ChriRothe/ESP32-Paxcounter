@@ -52,6 +52,15 @@ Gespeicherte Einstellungen im NVRAM lassen sich mit `pio run -t erase` zurückse
 Die Firmware aus dem GitHub-Actions-Build enthält nur Platzhalter-WLAN-Daten. Sie dient
 zur Build-Kontrolle; für den Einsatz bitte lokal mit der eigenen `ota.conf` flashen.
 
+## Auswertung
+
+```
+pip install pandas plotly
+python tools/analyze.py E:\
+```
+Das Script erzeugt aus den Dateien der SD-Karte einen interaktiven HTML-Bericht und eine
+Excel-taugliche Tagestabelle, siehe [PROJEKTDOKU](PROJEKTDOKU_Paxcounter.md#11-auswertung--diagramme).
+
 ## Wichtige Einstellungen
 
 | Datei | Parameter | Wert |
