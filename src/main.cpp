@@ -424,7 +424,8 @@ void setup() {
   ESP_LOGI(TAG, "Starting Interrupt Handler...");
   xTaskCreatePinnedToCore(irqHandler,      // task function
                           "irqhandler",    // name of task
-                          4096,            // stack size of task
+                          8192,            // stack size of task (custom: 8k,
+                                           // SD/FATFS with LFN on stack)
                           (void *)1,       // parameter of the task
                           4,               // priority of the task
                           &irqHandlerTask, // task handle

@@ -15,11 +15,14 @@
 
 #include "sdcard.h"
 #include "esp_log.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 #include "time.h"
 #include <string.h>
 #include <stdlib.h>
 #include <sys/time.h>
 #include <unistd.h>
+#include <errno.h>
 
 #if (HAS_SDS011)
 #include "sds011read.h"
@@ -85,7 +88,7 @@ static bool openFile(FILE **fd, const char *filename, const char *mode = "a") {
   char path[64];
   mkpath(path, sizeof(path), filename);
   if ((*fd = fopen(path, mode)) == NULL) {
-    ESP_LOGE(TAG, "Cannot open: %s", path);
+    ESP_LOGE(TAG, "Cannot open: %s (errno %d: %s)", path, errno, strerror(errno));
     return false;
   }
   ESP_LOGI(TAG, "Opened: %s", path);
@@ -435,6 +438,9 @@ static void flush_interval(void) {
            startBuf, cur.blePeak, bleDelta, bleMa30, cur.wifiPeak,
            trend_str(trend), phase_str(phase));
 
+  ESP_LOGI(TAG, "Stack headroom of calling task: %u bytes",
+           (unsigned)uxTaskGetStackHighWaterMark(NULL));
+
   day_apply(cur.slot, cur.blePeak, cur.wifiPeak);
   cur.samples = 0;
 
@@ -592,7 +598,9 @@ bool sdcard_init(bool create) {
 #endif
 
   if (ret != ESP_OK) {
-    ESP_LOGI(TAG, "SD card not found (%s)", esp_err_to_name(ret));
+    ESP_LOGW(TAG, "SD card not mounted (%s) - card inserted before power-on? "
+                  "FAT32 formatted (exFAT is not supported)?",
+             esp_err_to_name(ret));
     return false;
   }
 
