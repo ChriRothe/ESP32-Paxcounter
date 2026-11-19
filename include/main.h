@@ -25,6 +25,7 @@
 #include "antenna.h"
 #include "button.h"
 #include "ntp_sync.h"
+#include "setupmode.h"
 #include "custom_version.h"
 
 #endif

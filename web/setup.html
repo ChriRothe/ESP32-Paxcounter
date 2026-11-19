@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Paxcounter Einrichtung</title>
+<style>
+:root{--blue:#1f5fbf;--blue-d:#174a96;--blue-l:#eef4fd;--org:#d5591d;--org-l:#fdf0e8;--ink:#14181f;--ink2:#39404b;--mut:#5d6470;--line:#e3e6eb;--bg:#f4f5f7;--grey:#c9ced6;--ok:#167a3a;--warn:#a85a00}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-text-size-adjust:100%}
+header{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:14px 16px 10px;background:#fff;border-bottom:1px solid var(--line)}
+header b{font-size:19px;display:block}header small{font-size:13px;color:var(--mut)}
+.pill{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:#7a4a00;background:#fff1d6;border-radius:999px;padding:6px 10px;white-space:nowrap}
+main{max-width:560px;margin:0 auto;padding:16px 16px 96px;display:flex;flex-direction:column;gap:14px}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:12px}
+h2{margin:0;font-size:19px}h3{margin:0;font-size:16px}p{margin:0}
+.sub{font-size:13px;color:var(--mut)}.txt{color:var(--ink2);line-height:1.5}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:48px;border-radius:12px;border:0;font:600 16px system-ui,-apple-system,"Segoe UI",sans-serif;cursor:pointer;padding:0 16px;text-decoration:none}
+.btn.p{background:var(--blue);color:#fff}.btn.p:hover{background:var(--blue-d)}
+.btn.s{background:#e9eef7;color:#1a3f7a}.btn.g{background:none;color:var(--blue);width:auto;min-height:44px;padding:0 6px;font-size:14px}
+.btn.d{background:#fbeaea;color:#8a1f1f}
+.btn:disabled{background:#d7dbe2;color:var(--mut);cursor:default}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.big{border-radius:12px;padding:12px}.big .n{font-size:40px;font-weight:700;line-height:1.1}.big .l{font-size:13px;font-weight:600}
+.b{background:var(--blue-l)}.b .l{color:#1a3f7a}.o{background:var(--org-l)}.o .l{color:#8a3a0f}
+.row{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid #eef0f3}.row:first-child{border-top:0}
+.row .t{flex:1;display:flex;flex-direction:column;gap:2px}.row .t b{font-size:15px}
+.steps{display:flex;gap:6px}.steps i{flex:1;height:6px;border-radius:3px;background:#d7dbe2}.steps i.on{background:var(--blue)}
+.k{font-size:13px;font-weight:600;color:var(--blue)}
+.prog{height:12px;background:var(--line);border-radius:6px;overflow:hidden}.prog i{display:block;height:12px;background:var(--blue);width:0;transition:width .4s}
+.seg{display:flex;gap:6px;background:#eef0f3;border-radius:12px;padding:4px}
+.seg button{flex:1;min-height:44px;border:0;border-radius:10px;font:600 14px system-ui,sans-serif;background:none;color:var(--mut);cursor:pointer}
+.seg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.hist{position:relative;padding-top:22px}
+.bars{display:flex;gap:2px;align-items:flex-end;height:140px;border-bottom:1px solid #c3c8d0}
+.bars i{flex:1;border-radius:4px 4px 0 0;min-height:3px;background:#eef0f3}
+.mark{position:absolute;top:16px;bottom:18px;width:2px;background:var(--ink)}
+.markl{position:absolute;top:0;transform:translateX(-50%);font-size:11px;font-weight:700;white-space:nowrap}
+.phone{position:absolute;top:34px;transform:translateX(-50%);font-size:10px;font-weight:600;color:#1a3f7a;background:#fff;border:1px solid #9ec5f4;border-radius:6px;padding:1px 4px;white-space:nowrap}
+.axis{display:flex;justify-content:space-between;font-size:11px;color:var(--mut);margin-top:4px}
+.leg{display:flex;gap:14px;font-size:12px;color:var(--ink2)}.leg span{display:flex;align-items:center;gap:6px}.leg i{width:12px;height:12px;border-radius:3px}
+input[type=range]{width:100%;accent-color:var(--blue);height:32px}
+label.f{display:flex;flex-direction:column;gap:6px;font-size:15px;font-weight:600}
+.field{width:100%;min-height:48px;border:1px solid #c9ced6;border-radius:12px;padding:0 14px;font:16px system-ui,sans-serif;color:var(--ink);background:#fff}
+.sig{display:flex;gap:4px;align-items:flex-end;height:56px}.sig i{flex:1;border-radius:3px;background:var(--line)}.sig i.on{background:var(--blue)}
+.okbox{display:flex;align-items:center;gap:10px;background:#e8f5ec;border-radius:12px;padding:12px;color:#10532a}
+.center{align-items:center;text-align:center}
+nav{position:fixed;left:0;right:0;bottom:0;z-index:2;display:flex;background:#fff;border-top:1px solid var(--line);padding:4px 4px calc(8px + env(safe-area-inset-bottom))}
+nav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;border:0;background:none;font:500 11px system-ui,sans-serif;color:var(--mut);cursor:pointer;min-height:56px;justify-content:center}
+nav button.on{color:var(--blue);font-weight:700}
+#toast{position:fixed;left:16px;right:16px;bottom:84px;z-index:3;background:var(--ink);color:#fff;border-radius:12px;padding:12px 14px;font-size:14px;display:none;max-width:528px;margin:0 auto}
+svg{flex:none}
+</style>
+</head>
+<body>
+<header>
+  <div><b>Paxcounter</b><small id="site">…</small></div>
+  <span class="pill"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Einrichtung · <span id="cd">–</span></span>
+</header>
+<main id="main"></main>
+<div id="toast" role="status"></div>
+<nav aria-label="Bereiche" id="nav"></nav>
+<script>
+"use strict";
+const $=s=>document.querySelector(s);
+const ICON={
+ ok:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#167a3a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="in Ordnung"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l3 3 5-6"/></svg>',
+ warn:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#a85a00" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Achtung"><path d="M12 3l9.5 17h-19z"/><path d="M12 10v4M12 17.5v.01"/></svg>',
+ bad:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#a52a2a" stroke-width="2.2" stroke-linecap="round" role="img" aria-label="Fehler"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></svg>',
+ dl:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>'
+};
+const TABS=[["home","Übersicht","M3 11l9-7 9 7v9h-6v-6H9v6H3z"],["cal","Einlernen","M4 12h3l2-5 4 10 2-5h5"],["data","Daten","M12 4v11M7 10l5 5 5-5M5 20h14"],["set","Einstellungen","M4 7h10M18 7h2M4 17h4M12 17h8M16 5v4M10 15v4"]];
+const S={tab:"home",st:null,live:{ble:[],wifi:[],sta:null},cal:0,meas:0,base:new Set(),cap:null,capBle:null,tech:"ble",thrBle:-75,thrWifi:-75,files:null,dirty:false};
+
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function toast(m){const t=$("#toast");t.textContent=m;t.style.display="block";clearTimeout(toast.h);toast.h=setTimeout(()=>t.style.display="none",3500);}
+async function api(path,body){
+  const o=body?{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:new URLSearchParams(body).toString()}:{};
+  const r=await fetch(path,o); if(!r.ok) throw new Error(r.status); return r.json();
+}
+const cnt=(l,t)=>l.filter(d=>d[1]>=t).length;
+const hhmm=d=>d.toLocaleTimeString("de-DE");
+const word=v=>v>=-55?"sehr nah":v>=-65?"nah":v>=-75?"mittel":v>=-85?"weit":"sehr weit";
+const pos=v=>((Math.min(-30,Math.max(-100,v))+100)/70*100).toFixed(1)+"%";
+
+/* ---------- Navigation ---------- */
+function nav(){ $("#nav").innerHTML=TABS.map(([id,l,ic])=>`<button class="${S.tab==id?"on":""}" ${S.tab==id?'aria-current="page"':""} onclick="go('${id}')"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${ic}"/></svg>${l}</button>`).join(""); }
+function go(t){ S.tab=t; if(t=="cal"&&S.cal==4)S.cal=0; if(t=="data")loadFiles(); render(); window.scrollTo(0,0); }
+
+/* ---------- Bildschirme ---------- */
+function render(){ nav(); const m=$("#main"); m.innerHTML=({home:vHome,cal:vCal,data:vData,set:vSet})[S.tab](); tick(); }
+
+function vHome(){ return `
+<section class="card"><div style="display:flex;justify-content:space-between;align-items:baseline"><h3>Gerade in Reichweite</h3><span class="sub">live</span></div>
+<div class="two"><div class="big b"><div class="l">Bluetooth</div><div class="n" id="hb">–</div><div class="sub">Geräte</div></div>
+<div class="big o"><div class="l">WLAN</div><div class="n" id="hw">–</div><div class="sub">Geräte</div></div></div>
+<p class="sub">Gezählt wird nur, was innerhalb der eingestellten Empfindlichkeit liegt. WLAN wird im Einrichtungsmodus nur auf einem Kanal erfasst und zeigt daher weniger als später.</p></section>
+<section class="card" style="padding-top:4px;padding-bottom:4px" id="status"></section>
+<button class="btn p" onclick="finish()">Zählung jetzt starten</button>
+<p class="sub" style="text-align:center">Ohne Eingabe startet die Zählung automatisch, wenn die Einrichtungszeit abläuft.</p>`; }
+
+function statusRows(){
+  const s=S.st; if(!s) return '<p class="sub" style="padding:12px 0">Verbinde …</p>';
+  const dev=new Date(s.time*1000), now=new Date(), diff=Math.round((now-dev)/1000);
+  const clockOk=s.timeValid && Math.abs(diff)<60;
+  let h=`<div class="row">${clockOk?ICON.ok:ICON.warn}<div class="t"><b>Uhrzeit</b><span class="sub">${s.timeValid?"Gerät "+hhmm(dev)+(clockOk?" · stimmt mit dem Handy überein":" · Handy "+hhmm(now)):"Uhr ist nicht gestellt"}</span></div></div>`;
+  if(!clockOk) h+=`<button class="btn s" style="margin-bottom:12px" onclick="syncTime()">Uhrzeit vom Handy übernehmen</button>`;
+  h+=`<div class="row">${s.sd?ICON.ok:ICON.bad}<div class="t"><b>Speicherkarte</b><span class="sub">${s.sd?"eingesteckt · "+(s.sdFree/1024).toFixed(1).replace(".",",")+" GB frei":"nicht gefunden – FAT32-Karte vor dem Einschalten einstecken"}</span></div></div>`;
+  if(s.batMv) h+=`<div class="row">${s.batPct<20?ICON.warn:ICON.ok}<div class="t"><b>Akku</b><span class="sub">ca. ${s.batPct} % · ${(s.batMv/1000).toFixed(2).replace(".",",")} V</span></div></div>`;
+  h+=`<div class="row"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1f5fbf" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h3l2-5 4 10 2-5h5"/></svg><div class="t"><b>Empfindlichkeit</b><span class="sub">Bluetooth ab ${S.thrBle} dBm · WLAN ab ${S.thrWifi} dBm</span></div><button class="btn g" onclick="go('cal')">Einlernen</button></div>`;
+  return h;
+}
+
+function vCal(){
+  const st=S.cal>=1&&S.cal<=3?`<div class="steps" aria-hidden="true">${[1,2,3].map(n=>`<i class="${S.cal>=n?"on":""}"></i>`).join("")}</div>`:"";
+  if(S.cal==0) return `<section class="card"><h2>Empfindlichkeit einlernen</h2>
+<p class="txt">Der Paxcounter soll nur Geräte im gewünschten Bereich zählen, nicht die ganze Straße. In drei kurzen Schritten stellen Sie das direkt vor Ort ein.</p>
+<ol style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px;line-height:1.45"><li><b>Umgebung erfassen:</b> eine Minute messen, bevor Besucher da sind.</li><li><b>Grenze festlegen:</b> mit diesem Handy an den Rand des Bereichs gehen.</li><li><b>Prüfen:</b> das Ergebnis ansehen und bei Bedarf nachregeln.</li></ol></section>
+<button class="btn p" onclick="calStart()">Los geht's</button>`;
+  if(S.cal==1) return st+`<section class="card"><span class="k">Schritt 1 von 3</span><h2>Umgebung erfassen</h2>
+<p class="txt">Bitte warten, möglichst ohne Besucher in der Nähe. So erkennt das Gerät, was ohnehin immer da ist, z. B. Kasse, Router oder Lautsprecher.</p>
+<div class="prog" role="progressbar" aria-label="Messfortschritt" aria-valuemin="0" aria-valuemax="100"><i id="pg"></i></div>
+<div style="display:flex;justify-content:space-between;font-size:14px;color:var(--ink2)"><span id="pgt">Messung läuft …</span><span id="pgp">0 %</span></div>
+<div class="two"><div class="big b"><div class="n" id="bb" style="font-size:24px">0</div><div class="sub">Bluetooth-Geräte</div></div><div class="big o"><div class="n" id="bw" style="font-size:24px">0</div><div class="sub">WLAN-Geräte</div></div></div></section>
+<button class="btn p" id="next1" disabled onclick="S.cal=2;render()">Weiter</button>`;
+  if(S.cal==2) return st+`<section class="card"><span class="k">Schritt 2 von 3</span><h2>Grenze festlegen</h2>
+<p class="txt">Gehen Sie mit diesem Handy (Bluetooth an) an die Stelle, bis zu der noch gezählt werden soll, z. B. den Eingang oder die Absperrung. Warten Sie dort einige Sekunden.</p>
+<div class="center" style="display:flex;flex-direction:column;gap:6px;padding:8px 0"><span class="sub">Signal Ihres Handys</span>
+<span style="font-size:48px;font-weight:700;line-height:1"><span id="pr">–</span> <span style="font-size:18px;color:var(--mut)">dBm</span></span><span id="pw" style="font-weight:600;color:#1a3f7a">&nbsp;</span></div>
+<div class="sig" id="sig" aria-hidden="true"></div><div class="axis"><span>weit weg</span><span>ganz nah</span></div>
+<p class="sub" id="pbl"></p>
+<div id="capbox"></div></section><div id="capbtn"></div>`;
+  if(S.cal==3) return st+`<section class="card"><span class="k">Schritt 3 von 3</span><h2>Ergebnis prüfen</h2>
+<div class="seg" role="group" aria-label="Funkart"><button class="${S.tech=="ble"?"on":""}" onclick="S.tech='ble';render()">Bluetooth</button><button class="${S.tech=="wifi"?"on":""}" onclick="S.tech='wifi';render()">WLAN</button></div>
+<div>Jetzt würden <b id="hc" style="font-size:20px">–</b> von <span id="ht">–</span> ${S.tech=="ble"?"Bluetooth":"WLAN"}-Geräten gezählt.</div>
+<div class="hist" id="hist"></div>
+<div class="leg"><span><i style="background:${S.tech=="ble"?"var(--blue)":"var(--org)"}"></i>wird gezählt</span><span><i style="background:var(--grey)"></i>zu weit weg</span></div>
+<label class="f" style="font-size:14px"><span style="display:flex;justify-content:space-between"><span>Grenze verschieben</span><span id="tv"></span></span>
+<input type="range" id="thr" min="-100" max="-35" step="1" value="${S.tech=="ble"?S.thrBle:S.thrWifi}" oninput="setThr(this.value)"></label>
+<div class="axis" style="font-size:12px"><span>größerer Bereich</span><span>kleinerer Bereich</span></div></section>
+<button class="btn p" onclick="saveThr()">Übernehmen</button>`;
+  return `<section class="card center" style="padding:28px 16px"><svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#167a3a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M7.5 12.5l3 3 6-6.5"/></svg>
+<h2>Gespeichert</h2><p class="txt">Bluetooth zählt ab <b>${S.thrBle} dBm</b>, WLAN ab <b>${S.thrWifi} dBm</b>. Sie können jederzeit neu einlernen.</p></section>
+<button class="btn p" onclick="go('home')">Zur Übersicht</button>`;
+}
+
+function vData(){
+  let rows;
+  if(S.files===null) rows='<p class="sub" style="padding:12px 0">Lade …</p>';
+  else if(!S.files.length) rows='<p class="sub" style="padding:12px 0">Noch keine Messdaten auf der Karte.</p>';
+  else rows=S.files.map(f=>`<div class="row"><div class="t"><b>${esc(f.n)}</b><span class="sub">${f.s<1024?f.s+" Byte":(f.s/1024).toFixed(0)+" KB"}</span></div><a class="btn g" style="width:48px" href="/dl?f=${encodeURIComponent(f.n)}" download="${esc(f.n)}" aria-label="${esc(f.n)} herunterladen">${ICON.dl}</a></div>`).join("");
+  return `<section class="card"><h2>Messdaten</h2><p class="txt" style="font-size:14px">Die Daten bleiben auf der Speicherkarte. Hier laden Sie einzelne Dateien aufs Handy, ohne die Karte herauszunehmen. Für die Auswertung am PC die <b>raw_…csv</b>-Dateien verwenden.</p><p class="sub">Startet ein Download nicht (z. B. im automatisch geöffneten Anmeldefenster am iPhone), die Adresse <b>http://192.168.4.1</b> im normalen Browser öffnen.</p></section>
+<section class="card" style="padding-top:4px;padding-bottom:4px">${rows}</section>`;
+}
+
+function vSet(){
+  const s=S.st||{}; const seg=(name,vals,cur,unit)=>`<div class="seg" role="group">${vals.map(v=>`<button type="button" class="${v==cur?"on":""}" onclick="pickSeg(this,'${name}',${v})">${v} ${unit}</button>`).join("")}</div>`;
+  return `<form class="card" style="gap:18px" onsubmit="saveSet(event)" id="sf">
+<label class="f">Name des Messorts<input class="field" name="site" maxlength="40" value="${esc(s.site||"")}" placeholder="z. B. Eingang Festhalle"></label>
+<div style="display:flex;flex-direction:column;gap:6px"><b style="font-size:15px">Messen alle</b>${seg("interval",[1,2,5],s.interval,"Min")}<input type="hidden" name="interval" value="${s.interval||1}"><span class="sub">Kürzer = genauerer Verlauf, etwas mehr Stromverbrauch.</span></div>
+<div style="display:flex;flex-direction:column;gap:6px"><b style="font-size:15px">Einrichtungszeit nach dem Einschalten</b>${seg("setup",[5,10,30],s.setup,"Min")}<input type="hidden" name="setup" value="${s.setup||10}"></div>
+<label style="display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:15px;font-weight:600;min-height:44px"><span>Anzeige während der Zählung<br><span class="sub" style="font-weight:400">Aus spart Strom</span></span><input type="checkbox" name="display" value="1" ${s.display?"checked":""} style="width:24px;height:24px;accent-color:var(--blue)"></label>
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px"><span style="font-size:15px;font-weight:600">Empfindlichkeit<br><span class="sub" style="font-weight:400">Bluetooth ${S.thrBle} dBm · WLAN ${S.thrWifi} dBm</span></span><button type="button" class="btn g" onclick="go('cal')">Einlernen</button></div>
+<details><summary style="cursor:pointer;font-weight:600;min-height:44px;display:flex;align-items:center">Erweitert</summary>
+<div style="display:flex;flex-direction:column;gap:12px;padding-top:8px"><p class="sub">Nur nötig, wenn die Uhr beim Einschalten automatisch über das Internet gestellt werden soll. Sonst genügt „Uhrzeit vom Handy übernehmen“.</p>
+<label class="f" style="font-size:14px">WLAN-Name<input class="field" name="ssid" maxlength="32" value="${esc(s.ssid||"")}" placeholder="optional" autocomplete="off"></label>
+<label class="f" style="font-size:14px">WLAN-Passwort<input class="field" type="password" name="pass" maxlength="64" placeholder="${s.hasPass?"gespeichert – leer lassen zum Beibehalten":"optional"}" autocomplete="off"></label>
+<button type="button" class="btn d" onclick="factory()">Auf Werkseinstellungen zurücksetzen</button>
+<p class="sub">Firmware ${esc(s.fw||"")}</p></div></details>
+<button class="btn p" type="submit">Speichern</button></form>`;
+}
+
+/* ---------- Live-Aktualisierung ---------- */
+function tick(){
+  const L=S.live, s=S.st;
+  if(s){ $("#site").textContent=s.site||"Messort noch ohne Namen"; const c=Math.max(0,s.cd|0); $("#cd").textContent=Math.floor(c/60)+":"+String(c%60).padStart(2,"0"); }
+  if(S.tab=="home"){ $("#hb").textContent=cnt(L.ble,S.thrBle); $("#hw").textContent=cnt(L.wifi,S.thrWifi); $("#status").innerHTML=statusRows(); }
+  if(S.tab=="cal"){
+    if(S.cal==1){ $("#pg").style.width=S.meas+"%"; $("#pgp").textContent=Math.round(S.meas)+" %"; $("#bb").textContent=L.ble.length; $("#bw").textContent=L.wifi.length;
+      if(S.meas>=100){ $("#pgt").textContent="Fertig"; $("#next1").disabled=false; } }
+    if(S.cal==2){ const ph=phone(); $("#pr").textContent=ph.rssi??"–"; $("#pw").textContent=ph.rssi!=null?word(ph.rssi):"Handy noch nicht erkannt";
+      let b=""; for(let i=0;i<10;i++){ b+=`<i class="${ph.rssi!=null&&ph.rssi>=-95+i*4?"on":""}" style="height:${8+i*5}px"></i>`; } $("#sig").innerHTML=b;
+      $("#pbl").textContent=ph.ble!=null?"Bluetooth-Signal Ihres Handys: "+ph.ble+" dBm":"Bluetooth-Signal des Handys noch nicht eindeutig erkannt – es wird das WLAN-Signal verwendet.";
+      $("#capbox").innerHTML=S.cap!=null?`<div class="okbox">${ICON.ok}<span>Grenze gespeichert: <b>${S.cap} dBm</b></span></div>`:"";
+      const want=S.cap!=null?"c":"n"; if($("#capbtn").dataset.m!==want){ $("#capbtn").dataset.m=want;
+        $("#capbtn").innerHTML=S.cap!=null?`<div style="display:flex;gap:10px"><button class="btn s" style="flex:1" onclick="S.cap=null;tick()">Nochmal</button><button class="btn p" style="flex:2" onclick="S.cal=3;render()">Weiter</button></div>`:`<button class="btn p" onclick="capture()">Hier ist die Grenze</button>`; } }
+    if(S.cal==3) hist();
+  }
+}
+function phone(){
+  // WLAN: das mit dem Gerät verbundene Handy (sicher). BLE: stärkstes Gerät, das in Schritt 1 nicht da war.
+  let ble=null; for(const d of S.live.ble){ if(!S.base.has(d[0]) && (ble==null||d[1]>ble)) ble=d[1]; }
+  const w=S.live.sta; return {rssi: w!=null?w:ble, ble, wifi:w};
+}
+function hist(){
+  const tech=S.tech, list=tech=="ble"?S.live.ble:S.live.wifi, thr=tech=="ble"?S.thrBle:S.thrWifi, col=tech=="ble"?"var(--blue)":"var(--org)";
+  const bins=[]; let mx=1; for(let lo=-100;lo<-30;lo+=5){ const c=list.filter(d=>d[1]>=lo&&d[1]<lo+5).length; bins.push([lo,c]); if(c>mx)mx=c; }
+  let h=`<div class="markl" style="left:${pos(thr)}">Grenze</div><div class="mark" style="left:${pos(thr)}"></div>`;
+  const pm=tech=="ble"?S.capBle:S.cap; if(pm!=null) h+=`<div class="phone" style="left:${pos(pm)}">Ihr Handy</div>`;
+  h+=`<div class="bars" role="img" aria-label="Verteilung der Geräte nach Signalstärke">${bins.map(([lo,c])=>`<i style="height:${Math.max(3,Math.round(c/mx*130))}px;background:${c==0?"#eef0f3":(lo+2.5>=thr?col:"var(--grey)")}"></i>`).join("")}</div><div class="axis"><span>weit weg (−100)</span><span>nah (−30 dBm)</span></div>`;
+  $("#hist").innerHTML=h; $("#hc").textContent=cnt(list,thr); $("#ht").textContent=list.length; $("#tv").textContent=thr+" dBm";
+}
+
+/* ---------- Aktionen ---------- */
+function calStart(){ S.cal=1; S.meas=0; S.base=new Set(); S.cap=null; S.capBle=null; render(); }
+function capture(){ const ph=phone(); if(ph.rssi==null){ toast("Handy noch nicht erkannt – bitte einen Moment warten."); return; }
+  S.cap=ph.rssi; S.capBle=ph.ble!=null?ph.ble:ph.rssi;
+  S.thrWifi=Math.max(-100,(ph.wifi!=null?ph.wifi:ph.rssi)-5); S.thrBle=Math.max(-100,S.capBle-2); tick(); }
+function setThr(v){ v=parseInt(v,10); if(S.tech=="ble")S.thrBle=v; else S.thrWifi=v; hist(); }
+async function saveThr(){ try{ await api("/api/config",{thrBle:S.thrBle,thrWifi:S.thrWifi}); S.cal=4; render(); }catch(e){ toast("Speichern fehlgeschlagen – noch mit dem Gerät verbunden?"); } }
+async function syncTime(){ try{ await api("/api/time",{epoch:Math.round(Date.now()/1000)}); await poll(true); toast("Uhrzeit übernommen."); }catch(e){ toast("Konnte die Uhrzeit nicht setzen."); } }
+function pickSeg(b,name,v){ b.parentNode.querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b)); $("#sf").elements[name].value=v; }
+async function saveSet(e){ e.preventDefault(); const f=$("#sf"), d={site:f.site.value.trim(),interval:f.interval.value,setup:f.setup.value,display:f.display.checked?1:0,ssid:f.ssid.value.trim()};
+  if(f.pass.value) d.pass=f.pass.value; if(!d.ssid) d.pass="";
+  try{ await api("/api/config",d); await poll(true); toast("Einstellungen gespeichert."); }catch(err){ toast("Speichern fehlgeschlagen."); } }
+async function finish(){ if(!confirm("Einrichtung beenden und mit dem Zählen beginnen? Das Geräte-WLAN wird dabei abgeschaltet.")) return;
+  try{ await api("/api/finish",{}); }catch(e){} document.body.innerHTML='<main><section class="card center" style="padding:32px 16px"><h2>Zählung startet</h2><p class="txt">Das Gerät startet neu und zählt jetzt. Sie können diese Seite schließen.</p></section></main>'; }
+async function factory(){ if(!confirm("Alle Einstellungen auf Werkseinstellungen zurücksetzen? Die Messdaten auf der Karte bleiben erhalten.")) return;
+  try{ await api("/api/reset",{}); }catch(e){} document.body.innerHTML='<main><section class="card center" style="padding:32px 16px"><h2>Zurückgesetzt</h2><p class="txt">Das Gerät startet neu. Verbinden Sie sich danach erneut mit seinem WLAN.</p></section></main>'; }
+async function loadFiles(){ try{ S.files=(await api("/api/files")).files; }catch(e){ S.files=[]; } if(S.tab=="data") render(); }
+
+async function poll(full){
+  try{
+    if(full||!S.st||poll.n++%5==0){ S.st=await api("/api/status"); if(!S.dirty){ S.thrBle=S.st.thrBle; S.thrWifi=S.st.thrWifi; } }
+    S.live=await api("/api/live"); if(S.st) S.st.cd=S.live.cd;
+    if(S.tab=="cal"&&S.cal==1&&S.meas<100){ S.meas=Math.min(100,S.meas+100/60); S.meas=Math.round(S.meas*10)/10; if(S.meas>=100){S.meas=100; S.base=new Set(S.live.ble.map(d=>d[0]));} }
+    if(S.cal>=2) S.dirty=true;
+    tick();
+  }catch(e){}
+}
+poll.n=0;
+render(); poll(true); setInterval(poll,1000);
+</script>
+</body>
+</html>

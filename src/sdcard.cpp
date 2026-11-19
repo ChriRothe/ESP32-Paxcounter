@@ -23,6 +23,7 @@
 #include <sys/time.h>
 #include <unistd.h>
 #include <errno.h>
+#include "ff.h"
 
 #if (HAS_SDS011)
 #include "sds011read.h"
@@ -612,6 +613,23 @@ bool sdcard_init(bool create) {
   // Dateien werden erst beim ersten sdcardWriteData() geöffnet: dann sind
   // Zeitzone (do_after_reset) und Uhrzeit (RTC/NTP) sicher gesetzt.
   return useSDCard;
+}
+
+// ---------------------------------------------------------------------------
+// sdcard_space() — Gesamt- und freier Platz in Byte (für die Weboberfläche)
+// ---------------------------------------------------------------------------
+bool sdcard_space(uint64_t *total, uint64_t *freeb) {
+  *total = *freeb = 0;
+  if (!useSDCard)
+    return false;
+  FATFS *fs;
+  DWORD fre_clust;
+  if (f_getfree("0:", &fre_clust, &fs) != FR_OK)
+    return true; // gemountet, Größe unbekannt
+  uint64_t ss = 512; // FATFS-Sektorgröße der SD-Karte
+  *total = (uint64_t)(fs->n_fatent - 2) * fs->csize * ss;
+  *freeb = (uint64_t)fre_clust * fs->csize * ss;
+  return true;
 }
 
 // ---------------------------------------------------------------------------

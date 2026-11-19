@@ -14,6 +14,7 @@
 #include "ntp_sync.h"
 #include "globals.h"
 #include "rtctime.h"
+#include "setupmode.h"
 
 #include <WiFi.h>
 #include <esp_wifi.h>
@@ -35,11 +36,18 @@ static void wifi_shutdown(void) {
 }
 
 bool ntp_sync_and_set_rtc(void) {
-  ESP_LOGI(TAG, "Starting NTP boot sync, SSID: %s", WIFI_SSID);
+  // Zugangsdaten aus der Weboberflaeche haben Vorrang vor ota.conf
+  const char *ssid = setupPrefs.ssid[0] ? setupPrefs.ssid : WIFI_SSID;
+  const char *pass = setupPrefs.ssid[0] ? setupPrefs.pass : WIFI_PASS;
+  if (!ssid[0] || strcmp(ssid, "MyHomeWifi") == 0) {
+    ESP_LOGI(TAG, "No WiFi configured - skipping NTP sync");
+    return false;
+  }
+  ESP_LOGI(TAG, "Starting NTP boot sync, SSID: %s", ssid);
 
   // --- 1. WiFi verbinden ---
   WiFi.mode(WIFI_STA);
-  WiFi.begin(WIFI_SSID, WIFI_PASS);
+  WiFi.begin(ssid, pass);
 
   uint32_t wifiStart = millis();
   while (WiFi.status() != WL_CONNECTED) {

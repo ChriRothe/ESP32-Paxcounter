@@ -1,5 +1,5 @@
 # Paxcounter Projektdokumentation
-**Stand: Oktober 2026 – Custom Build v1.2.0**
+**Stand: November 2026 – Custom Build v1.3.0**
 
 ---
 
@@ -49,7 +49,9 @@ setup()
  ├─ i2c_init(), Display …
  ├─ rtc_init()             DS3231 starten
  ├─ ntp_sync_and_set_rtc() nur bei Kaltstart: WLAN → NTP → DS3231 → WLAN AUS
- ├─ init_libpax()          BLE-/WiFi-Sniffer starten
+ ├─ setupmode_run()        nur bei Kaltstart: Einrichtungsmodus (Abschnitt 3a),
+ │                         danach Neustart direkt in den Zählbetrieb
+ ├─ init_libpax()          BLE-/WiFi-Sniffer starten (RSSI-Grenzen aus der Einrichtung)
  └─ time_init()            Systemzeit zyklisch aus der RTC (TIME_SYNC_INTERVAL)
 ```
 
@@ -68,6 +70,72 @@ setup()
 - **WLAN-Zugangsdaten:** `shared/ota.conf` (`OTA_WIFI_SSID`/`OTA_WIFI_PASS`).
   `shared/build.py` stellt sie im Code als `WIFI_SSID`/`WIFI_PASS` bereit.
 - Schlägt der NTP-Sync fehl (kein WLAN), läuft das Gerät mit der RTC-Zeit weiter.
+
+---
+
+## 3a. Einrichtungsmodus (Weboberfläche)
+
+Für Nutzer ohne Technikkenntnisse: Einstellungen, Uhrzeit, Empfindlichkeit und Daten-Download
+über den Handy-Browser, ohne App und ohne PC.
+
+**Ablauf**
+1. Gerät einschalten (Kaltstart). Das Display zeigt einen **QR-Code** und den WLAN-Namen
+   `Paxcounter-XXXX` (XXXX = Ende der MAC-Adresse, damit mehrere Geräte unterscheidbar sind).
+2. QR-Code mit der Handy-Kamera scannen: Das Handy verbindet sich mit dem offenen Geräte-WLAN,
+   die Einrichtungsseite öffnet sich automatisch (Captive Portal). Alternativ `http://192.168.4.1`.
+3. Nach der Einrichtungszeit (Standard 10 min, einstellbar 5/10/30) oder mit
+   „Zählung jetzt starten“ beendet das Gerät den Modus, startet neu und zählt.
+   Jede Bedienung verlängert die Restzeit auf mindestens 3 Minuten.
+
+Ein Neustart per Software (z. B. nach der Einrichtung) und das Aufwachen aus dem Deep Sleep
+starten **keinen** Einrichtungsmodus; nur das Aus- und Einschalten.
+
+**Funktionen der Oberfläche**
+| Bereich | Inhalt |
+|---|---|
+| Übersicht | Live-Zahl der Geräte innerhalb der Grenzen; Status Uhrzeit, SD-Karte, Akku, Empfindlichkeit; „Uhrzeit vom Handy übernehmen“ (stellt Systemzeit und DS3231); „Zählung jetzt starten“ |
+| Einlernen | Lernmodus in 3 Schritten: (1) 60 s Umgebung erfassen (Grundlast merken), (2) mit dem Handy an die Grenze gehen, „Hier ist die Grenze“, (3) Histogramm aller Geräte nach Signalstärke mit Schieberegler und Live-Anzahl, getrennt für Bluetooth und WLAN |
+| Daten | Dateien der SD-Karte einzeln herunterladen |
+| Einstellungen | Name des Messorts, Messintervall (1/2/5 min = `cfg.sendcycle`), Einrichtungszeit, Display während der Zählung (`cfg.screenon`), unter „Erweitert“ WLAN für den NTP-Sync, Werkseinstellungen |
+
+**Lernmodus – technische Details**
+- Im Einrichtungsmodus läuft ein eigener BLE-Scan (passiv, 40 ms Fenster / 80 ms Intervall)
+  und ein WLAN-Sniffer für Probe-Requests – **nur auf dem Kanal des Geräte-WLANs (1)**.
+  WLAN-Zahlen sind daher im Einrichtungsmodus niedriger als später im Zählbetrieb.
+- Geräte werden nur als anonyme 16-bit-Kurzkennung (Hash mit Zufalls-Salt je Start)
+  an den Browser gegeben, nie mit MAC-Adresse.
+- „Ihr Handy“: WLAN-Signal = das mit dem Gerät verbundene Handy (`esp_wifi_ap_get_sta_list`);
+  Bluetooth-Signal = stärkstes Gerät, das in Schritt 1 noch nicht da war. Wird das Bluetooth-Signal
+  nicht eindeutig erkannt, dient das WLAN-Signal als Näherung.
+- Vorschlag nach „Hier ist die Grenze“: Bluetooth-Grenze = gemessener Wert − 2 dB,
+  WLAN-Grenze = gemessener Wert − 5 dB; danach im Histogramm frei verschiebbar.
+- Die Grenzen werden getrennt an libpax übergeben (`ble_rssi_threshold`, `wifi_rssi_threshold`).
+  Vorher galt ein gemeinsamer Wert `RSSILIMIT` (bleibt Startwert, solange nichts eingelernt ist).
+
+**Speicherung**
+- NVS-Namespace `paxsetup`: `thrBle`, `thrWifi`, `setupMin`, `site`, `ssid`, `pass`.
+- Messintervall und Display: in der normalen Paxcounter-Konfiguration (`saveConfig`).
+- WLAN-Zugangsdaten aus der Oberfläche haben Vorrang vor `ota.conf`. Steht in `ota.conf` nur
+  die Vorlage (`MyHomeWifi`), wird der NTP-Sync übersprungen (kein Warten beim Start).
+
+**Dateien**
+- `web/setup.html`: die komplette Oberfläche (HTML/CSS/JS, ohne externe Bibliotheken).
+- `tools/embed_web.py`: packt sie vor jedem Build per gzip nach `include/setup_html.h` (~9 KB).
+- `src/setupmode.cpp`, `include/setupmode.h`: Access Point, DNS (Captive Portal), Webserver,
+  JSON-API, BLE-/WLAN-Erfassung, Display mit QR-Code.
+- Aktivierung je Board: `#define HAS_SETUPMODE 1` in der HAL-Datei (`ttgov21new.h`).
+
+**JSON-API** (für Weiterentwicklung): `GET /api/status`, `GET /api/live`, `GET /api/files`,
+`GET /dl?f=<datei>`, `POST /api/time` (`epoch`), `POST /api/config` (`thrBle`, `thrWifi`, `site`,
+`interval`, `setup`, `display`, `ssid`, `pass`), `POST /api/finish`, `POST /api/reset`.
+
+**Hinweise**
+- iPhone: Im automatisch geöffneten Anmeldefenster funktionieren Downloads nicht immer.
+  Dann `http://192.168.4.1` in Safari öffnen. Beim Schließen des Fensters „Ohne Internet
+  verwenden“ wählen, sonst trennt das iPhone die Verbindung.
+- Die Firmware braucht mit dem Einrichtungsmodus ~1,75 MB. Deshalb Partitionstabelle
+  `huge_app.csv` (3 MB App, kein OTA). Beim ersten Upload danach einmal komplett flashen
+  (normaler Upload genügt; falls das Gerät nicht startet: `pio run -t erase`, dann Upload).
 
 ---
 
@@ -182,9 +250,11 @@ Rohdaten ist das an den Zeitstempeln erkennbar. In `daily_summary` zählt pro
 | `src/sdcard.cpp`, `include/sdcard.h` | SD-Logging, Aggregation, Tageszusammenfassung |
 | `src/ntp_sync.cpp`, `include/ntp_sync.h` | NTP-Sync beim Kaltstart |
 | `src/rtctime.cpp` | DS3231 mit expliziten I²C-Pins |
-| `src/main.cpp` | Boot-Reihenfolge RTC → NTP → libpax |
+| `src/main.cpp` | Boot-Reihenfolge RTC → NTP → Einrichtungsmodus → libpax |
+| `src/setupmode.cpp`, `include/setupmode.h` | Einrichtungsmodus: WLAN-Access-Point, Weboberfläche, Lernmodus |
+| `web/setup.html`, `tools/embed_web.py`, `include/setup_html.h` | Weboberfläche (Quelle, Packer, erzeugtes Array) |
 | `include/custom_version.h` | Build-Version, Ausgabe im Boot-Log |
-| `shared/hal/ttgov21new.h` | Board: LoRa aus, RTC an, SD an |
+| `shared/hal/ttgov21new.h` | Board: LoRa aus, RTC an, SD an, Einrichtungsmodus an |
 | `shared/paxcounter.conf` | Laufzeit-Konfiguration (im Repo versioniert) |
 | `platformio.ini` | Build-Konfiguration (im Repo versioniert, libpax gepinnt) |
 | `shared/ota.conf`, `shared/loraconf.h` | Zugangsdaten, **nicht** im Repo (Vorlagen `*_sample.*`) |
@@ -241,6 +311,10 @@ die `.bin`-Dateien an das Release. Diese Builds enthalten nur Platzhalter-WLAN-D
 
 Nach Änderungen an `paxcounter.conf` immer zuerst **Clean** ausführen.
 
+Stand v1.3.0 (20.11.2026): Build erfolgreich, RAM 26,7 %, Flash 1,75 MB von 3 MB
+(`huge_app.csv`). Die Weboberfläche wurde gegen einen simulierten Server im Browser
+durchgetestet; der Test auf echter Hardware steht noch aus.
+
 Geprüft am 27.10.2026: Build mit espressif32@6.4.0 (arduino-esp32 2.0.11) erfolgreich,
 RAM 21,9 %, Flash 58,9 %. Die SD-Logik wurde zusätzlich auf dem PC simuliert:
 Tageswechsel, Neustart mitten am Tag, Umstellung auf Sommerzeit (29.03.2026, 138
@@ -290,7 +364,8 @@ neu berechnet, mit derselben Logik wie in der Firmware (Peak-Dauer = Intervalle
 
 ## 13. Nächste Schritte / Offene Punkte
 
-- [ ] v1.2 auf dem Board testen: Boot-Log (NTP vor libpax), WiFi-Werte > 0, Lokalzeit in den CSVs
+- [ ] v1.3 auf dem Board testen: Einrichtungsmodus (QR-Code, Captive Portal, Lernmodus, Download), danach Boot-Log, WiFi-Werte > 0, Lokalzeit in den CSVs
+- [ ] Einrichtungsmodus: ZIP-Download aller Dateien, Auswertung im Browser (wie `analyze.py`)
 - [ ] Upstream v3.8.0 (u. a. libpax-Umzug nach `dbinfrago/libpax`, neuere Libs) einpflegen
 - [x] Auswertungs-Script `tools/analyze.py` (HTML-Bericht)
 - [ ] MQTT-Anbindung via HiveMQ Cloud für Live-Daten
@@ -304,6 +379,8 @@ neu berechnet, mit derselben Logik wie in der Firmware (Peak-Dauer = Intervalle
 
 | Version | Datum | Änderungen |
 |---|---|---|
+| 1.3.0 | 20.11.2026 | Einrichtungsmodus mit Weboberfläche: Geräte-WLAN mit QR-Code und Captive Portal, Status, Uhrzeit vom Handy, Lernmodus für die Empfindlichkeit mit Histogramm (getrennt BLE/WLAN), Daten-Download, Einstellungen; getrennte RSSI-Grenzen für libpax; NTP-WLAN aus der Oberfläche; Partition `huge_app.csv` |
+| 1.2.1 | 30.10.2026 | irqhandler-Stack 8 KB, Stack-Log, bessere SD-Fehlermeldungen, FastLED 3.10.1; `tools/analyze.py` |
 | 1.2.0 | 27.10.2026 | NTP vor libpax (WiFi-Zähler-Fix), Lokalzeit (`configTzTime`, `localtime_r`), DST-Regel korrigiert, SD-Dateien erst bei gültiger Zeit, neue Phasen-/Trend-Logik (30 min), Tageszusammenfassung pro Intervall und neustartsicher, Header-/va_list-Fixes, `main.cpp` bereinigt, libpax gepinnt + API-Umbenennung, `.gitignore` repariert, CI für das eigene Board |
 | 1.1 | 03/2026 | MEZ/MESZ beim NTP-Sync, Doku |
 | 1.0 | 02/2026 | DS3231-RTC, NTP-Boot-Sync, SD-Aggregation (10 min), ISO-8601-Zeitstempel |

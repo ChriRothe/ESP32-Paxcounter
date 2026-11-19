@@ -22,6 +22,7 @@
 
 #define HAS_WIFI 1
 #define HAS_WEBSERVER 1
+#define HAS_SETUPMODE 1 // custom: Einrichtungsmodus mit Weboberflaeche nach Kaltstart
 
 #define HAS_DISPLAY 1
 #define HAS_LED (25) // green on board LED

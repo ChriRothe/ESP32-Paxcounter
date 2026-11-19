@@ -124,6 +124,7 @@ void setup() {
 
   // load device configuration from NVRAM and set runmode
   do_after_reset();
+  setup_prefs_load(); // custom: Einstellungen aus der Weboberflaeche
 
   ESP_LOGI(TAG, "Starting %s v%s (runmode=%d / restarts=%d)", clientId,
            PROGVERSION, RTC_runmode, RTC_restarts);
@@ -307,6 +308,13 @@ void setup() {
   }
 #endif
 
+// custom: Einrichtungsmodus mit Weboberflaeche nach einem Kaltstart.
+// Kehrt nicht zurueck, sondern startet danach neu in den Zaehlbetrieb.
+#if (HAS_SETUPMODE)
+  if (RTC_runmode == RUNMODE_POWERCYCLE)
+    setupmode_run();
+#endif
+
   // start libpax lib (includes timer to trigger cyclic senddata)
   ESP_LOGI(TAG, "Starting libpax...");
   struct libpax_config_t configuration;
@@ -317,13 +325,15 @@ void setup() {
   configuration.wificounter = cfg.wifiscan;
   configuration.wifi_channel_map = cfg.wifichanmap;
   configuration.wifi_channel_switch_interval = cfg.wifichancycle;
-  configuration.wifi_rssi_threshold = cfg.rssilimit;
+  configuration.wifi_rssi_threshold = setupPrefs.thrWifi; // custom: getrennt
+  ESP_LOGI(TAG, "RSSI limits: WiFi %d dBm, BLE %d dBm", setupPrefs.thrWifi,
+           setupPrefs.thrBle);
   ESP_LOGI(TAG, "WIFISCAN: %s", cfg.wifiscan ? "on" : "off");
 
   // configure BLE sniffing
   configuration.blecounter = cfg.blescan;
   configuration.blescantime = cfg.blescantime;
-  configuration.ble_rssi_threshold = cfg.rssilimit;
+  configuration.ble_rssi_threshold = setupPrefs.thrBle;
   ESP_LOGI(TAG, "BLESCAN: %s", cfg.blescan ? "on" : "off");
 
   int config_update = libpax_update_config(&configuration);

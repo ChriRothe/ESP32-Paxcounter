@@ -23,6 +23,14 @@ werden dort direkt für die Auswertung aufbereitet: Spitzenzeiten, Tagesverlauf,
   - Zeitstempel im Format ISO 8601 in **Lokalzeit (MEZ/MESZ)**, ohne Suffix, damit Excel sie direkt versteht
   - neustart- und stromausfallsicher: Nach einem Reboot wird der Tageskontext von der Karte gelesen
 
+## Einrichtung per Handy (ab v1.3)
+
+Nach dem Einschalten zeigt das Display einen QR-Code. Mit der Handy-Kamera scannen, und die
+Einrichtungsseite öffnet sich im Browser: Status, Uhrzeit vom Handy übernehmen,
+**Empfindlichkeit einlernen** (Lernmodus mit Live-Diagramm), Messdaten herunterladen,
+Einstellungen. Nach der Einrichtungszeit (Standard 10 min) beginnt das Gerät zu zählen.
+Details: [PROJEKTDOKU, Abschnitt 3a](PROJEKTDOKU_Paxcounter.md#3a-einrichtungsmodus-weboberfläche).
+
 ## Hardware
 
 | Komponente | Details |

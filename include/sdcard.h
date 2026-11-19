@@ -134,6 +134,8 @@ bool sdcard_init(bool create = false);
 void sdcard_flush(void);
 void sdcard_close(void);
 
+bool sdcard_space(uint64_t *total, uint64_t *freeb);
+
 void sdcardWriteData(uint16_t noWifi, uint16_t noBle, uint16_t voltage = 0);
 
 #if (SDLOGGING)
